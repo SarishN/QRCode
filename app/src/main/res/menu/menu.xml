@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+<item android:id="@+id/save_image"
+    app:showAsAction="ifRoom"
+        android:title="Save"
+    android:icon="@drawable/ic_save"/>
+    <item android:id="@+id/copy"
+        app:showAsAction="ifRoom"
+        android:title="Copy"
+        android:icon="@drawable/ic_copy"/>
+    <item android:id="@+id/forecolour"
+        android:title="Foreground Colour"/>
+    <item android:id="@+id/backcolour"
+        android:title="Background Colour"/>
+    <item android:id="@+id/clear"
+        android:title="Clear"/>
+
+</menu>
