@@ -20,6 +20,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.util.Linkify;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -41,6 +42,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
 
     private static final int QR_CODE_WIDTH = 1000;
     private static final int QR_CODE_HEIGHT = 1000;
@@ -48,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int BAR_CODE_HEIGHT = 700;
     private static int FOREGROUND_COLOR = Color.parseColor("#000000");
     private static int BACKGROUND_COLOR = Color.parseColor("#ffffff");
-
 
     private EditText editText;
     private TextView result;
@@ -58,7 +59,9 @@ public class MainActivity extends AppCompatActivity {
     private String resultString = "";
     private Bitmap bmp;
     private boolean hasBeenPaused = false;
-    private String InputText = "";
+    static private String InputText = "";
+
+    static boolean isBitmapShowing = false;
 
     @Override
     protected void onResume() {
@@ -97,9 +100,16 @@ public class MainActivity extends AppCompatActivity {
             bmp = savedInstanceState.getParcelable("bitmap");
             FOREGROUND_COLOR = savedInstanceState.getInt("foreground");
             BACKGROUND_COLOR = savedInstanceState.getInt("background");
-            if (bmp != null) {
+//            Log.d(TAG, "onCreate: "+InputText);
+            if(isBitmapShowing){
+                if(IS_QR){
+                    QrBitmap();
+                } else {
+                    BarBitmap();
+                }
                 img.setImageBitmap(bmp);
             }
+//            Log.d(TAG, "onCreate: "+isBitmapShowing);
             resultString = savedInstanceState.getString("result");
             if (resultString != null && !resultString.isEmpty()) {
                 result.setText("Result: " + resultString);
@@ -126,6 +136,8 @@ public class MainActivity extends AppCompatActivity {
             BitMatrix bitMatrix = writer.encode(InputText, BarcodeFormat.CODE_128, BAR_CODE_WIDTH, BAR_CODE_HEIGHT, null);
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             bmp = barcodeEncoder.createBitmap(bitMatrix);
+
+            isBitmapShowing = true;
         } catch (WriterException e) {
             e.printStackTrace();
         }
@@ -149,67 +161,75 @@ public class MainActivity extends AppCompatActivity {
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             bmp = barcodeEncoder.createBitmap(bitMatrix);
 
+            isBitmapShowing = true;
         } catch (WriterException e) {
             e.printStackTrace();
         }
     }
 
     public void changeForegroundColour(View view) {
-        AmbilWarnaDialog colorPicker = new AmbilWarnaDialog(this, FOREGROUND_COLOR, new AmbilWarnaDialog.OnAmbilWarnaListener() {
-            @Override
-            public void onCancel(AmbilWarnaDialog dialog) {
-            }
-
-            @Override
-            public void onOk(AmbilWarnaDialog dialog, int color) {
-                //   Toast.makeText(MainActivity.this, String.valueOf(Color.valueOf(color)), Toast.LENGTH_LONG).show();
-                img.setImageResource(0);
-                if (IS_QR) {
-                    QrBitmap();
-                } else {
-                    BarBitmap();
+        if(isBitmapShowing) {
+            AmbilWarnaDialog colorPicker = new AmbilWarnaDialog(this, FOREGROUND_COLOR, new AmbilWarnaDialog.OnAmbilWarnaListener() {
+                @Override
+                public void onCancel(AmbilWarnaDialog dialog) {
                 }
-                bmp=changleColour(bmp, FOREGROUND_COLOR, color, BACKGROUND_COLOR);
-                img.setImageBitmap(bmp);
-          //      FOREGROUND_COLOR = color;
 
-            }
-        });
-        colorPicker.show();
+                @Override
+                public void onOk(AmbilWarnaDialog dialog, int color) {
+                    //   Toast.makeText(MainActivity.this, String.valueOf(Color.valueOf(color)), Toast.LENGTH_LONG).show();
+                    img.setImageResource(0);
+                    if (IS_QR) {
+                        QrBitmap();
+                    } else {
+                        BarBitmap();
+                    }
+                    bmp = changeColour(bmp, FOREGROUND_COLOR, color, BACKGROUND_COLOR);
+                    img.setImageBitmap(bmp);
+                    //      FOREGROUND_COLOR = color;
 
+                }
+            });
+            colorPicker.show();
+        } else {
+            Toast.makeText(MainActivity.this,"Generate QR or Bar Code to change foreground color!",Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void changeBackgroundColour(View view) {
-        AmbilWarnaDialog colorPicker = new AmbilWarnaDialog(this, BACKGROUND_COLOR, new AmbilWarnaDialog.OnAmbilWarnaListener() {
-            @Override
-            public void onCancel(AmbilWarnaDialog dialog) {
-            }
-
-            @Override
-            public void onOk(AmbilWarnaDialog dialog, int color) {
-                //   Toast.makeText(MainActivity.this, String.valueOf(Color.valueOf(color)), Toast.LENGTH_LONG).show();
-                img.setImageResource(0);
-                if (IS_QR) {
-                    QrBitmap();
-                } else {
-                    BarBitmap();
+        if(isBitmapShowing) {
+            AmbilWarnaDialog colorPicker = new AmbilWarnaDialog(this, BACKGROUND_COLOR, new AmbilWarnaDialog.OnAmbilWarnaListener() {
+                @Override
+                public void onCancel(AmbilWarnaDialog dialog) {
                 }
-                bmp=changleColour(bmp, BACKGROUND_COLOR, color, FOREGROUND_COLOR);
-                img.setImageBitmap(bmp);
-              //  BACKGROUND_COLOR = color;
 
-            }
-        });
-        colorPicker.show();
+                @Override
+                public void onOk(AmbilWarnaDialog dialog, int color) {
+                    //   Toast.makeText(MainActivity.this, String.valueOf(Color.valueOf(color)), Toast.LENGTH_LONG).show();
+                    img.setImageResource(0);
+                    if (IS_QR) {
+                        QrBitmap();
+                    } else {
+                        BarBitmap();
+                    }
+                    bmp = changeColour(bmp, BACKGROUND_COLOR, color, FOREGROUND_COLOR);
+                    img.setImageBitmap(bmp);
+                    //  BACKGROUND_COLOR = color;
+
+                }
+            });
+            colorPicker.show();
+        } else {
+            Toast.makeText(MainActivity.this,"Generate QR or Bar Code to change background color!",Toast.LENGTH_SHORT).show();
+        }
 
     }
 
-    private Bitmap changleColour(Bitmap scrBitmap, int referencecolour, int newcolour, int constantcolour) {
+    private Bitmap changeColour(Bitmap scrBitmap, int referencecolour, int newcolour, int constantcolour) {
         Bitmap newBitmap = Bitmap.createBitmap(scrBitmap);
         for (int i = 0; i < scrBitmap.getWidth(); i++) {
             for (int j = 0; j < scrBitmap.getHeight(); j++) {
-                int pixel = newBitmap.getPixel(i,j);
-                if (Color.rgb(Color.red(pixel),Color.green(pixel),Color.blue(pixel)) == referencecolour) {
+                int pixel = newBitmap.getPixel(i, j);
+                if (Color.rgb(Color.red(pixel), Color.green(pixel), Color.blue(pixel)) == referencecolour) {
                     newBitmap.setPixel(i, j, newcolour);
                 } else {
                     newBitmap.setPixel(i, j, constantcolour);
@@ -218,24 +238,25 @@ public class MainActivity extends AppCompatActivity {
         }
         return newBitmap;
     }
-public void copyToClipboard(View view)
-{
-    if(resultString.isEmpty())
-    {
-        Toast.makeText(MainActivity.this, "Scan First", Toast.LENGTH_SHORT).show();
-        return;
+
+    public void copyToClipboard(View view) {
+        if (resultString.isEmpty()) {
+            Toast.makeText(MainActivity.this, "Scan First", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText("Text Copied", resultString);
+        clipboard.setPrimaryClip(clip);
+        Toast.makeText(MainActivity.this, "Text Copied", Toast.LENGTH_SHORT).show();
     }
-    ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-    ClipData clip = ClipData.newPlainText("Text Copied",resultString);
-    clipboard.setPrimaryClip(clip);
-    Toast.makeText(MainActivity.this, "Text Copied", Toast.LENGTH_SHORT).show();
-}
+
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean("type", IS_QR);
         outState.putString("result", resultString);
-        outState.putParcelable("bitmap", bmp);
+// don't uncomment the below line as the size for parcelable is too long
+//        outState.putParcelable("bitmap", bmp);
         outState.putInt("foreground", FOREGROUND_COLOR);
         outState.putInt("background", BACKGROUND_COLOR);
     }
@@ -243,6 +264,7 @@ public void copyToClipboard(View view)
     @Override
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
+
     }
 
     @Override
@@ -276,8 +298,6 @@ public void copyToClipboard(View view)
         intentIntegrator.setOrientationLocked(true);
         intentIntegrator.setCaptureActivity(Capture.class);
         intentIntegrator.initiateScan();
-
-
     }
 
     @Override
@@ -307,6 +327,7 @@ public void copyToClipboard(View view)
     public void clear(View view) {
         editText.setText("");
         img.setImageResource(0);
+        isBitmapShowing = false;
         result.setText("");
         FOREGROUND_COLOR = Color.parseColor("#000000");
         BACKGROUND_COLOR = Color.parseColor("#ffffff");
@@ -320,33 +341,31 @@ public void copyToClipboard(View view)
     }
 
     public void saveToGallery(View view) {
-        if (img.getDrawable() == null) {
-            Toast.makeText(this, "Cannot Save", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        BitmapDrawable bitmapDrawable = (BitmapDrawable) img.getDrawable();
-        Bitmap bitmap = bitmapDrawable.getBitmap();
+        if(isBitmapShowing) {
 
-        File file = Environment.getExternalStorageDirectory();
-        File dir = new File(file.getAbsolutePath() + "/QRCode");
-        dir.mkdir();
-        String type;
-        if (IS_QR) {
-            type = "QRCODE";
+            File dir = new File(Environment.getExternalStorageDirectory() + "/QRCode");
+            if(!dir.exists()) {
+                boolean success = dir.mkdir();
+            }
+            String type;
+            if (IS_QR) {
+                type = "QRCODE";
+            } else {
+                type = "BARCODE";
+            }
+            String filename = String.format("%s.jpg", type + "_" + editText.getText().toString().trim().substring(0, 5) + "_" + System.currentTimeMillis());
+
+            File outfile = new File(dir.getAbsolutePath()+"/"+filename);
+            Toast.makeText(this, "Saved at: " + outfile.getPath(), Toast.LENGTH_LONG).show();
+            try {
+                FileOutputStream outputStream = new FileOutputStream(outfile);
+                bmp.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+                outputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } else {
-            type = "BARCODE";
-        }
-        String filename = String.format("%s.png", type + "_" + editText.getText().toString().trim().substring(0, 5) + "_" + System.currentTimeMillis());
-
-        File outfile = new File(dir, filename);
-        Toast.makeText(this, "Saved at: " + outfile.getPath(), Toast.LENGTH_LONG).show();
-        try {
-            FileOutputStream outputStream = new FileOutputStream(outfile);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
-            outputStream.flush();
-            outputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+            Toast.makeText(this, "Cannot Save", Toast.LENGTH_SHORT).show();
         }
     }
 
